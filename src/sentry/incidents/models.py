@@ -539,8 +539,9 @@ class AlertRuleTriggerAction(Model):
         PAGERDUTY = 1
         SLACK = 2
         MSTEAMS = 3
+        INTEGRATION = 4
 
-    INTEGRATION_TYPES = frozenset((Type.PAGERDUTY.value, Type.SLACK.value, Type.MSTEAMS.value))
+    INTEGRATION_TYPES = frozenset((Type.PAGERDUTY.value, Type.SLACK.value, Type.MSTEAMS.value, Type.INTEGRATION.value))
 
     class TargetType(Enum):
         # A direct reference, like an email address, Slack channel, or PagerDuty service
@@ -550,6 +551,8 @@ class AlertRuleTriggerAction(Model):
         # A specific team. This could be used to send an email to everyone associated
         # with a team.
         TEAM = 2
+        # When it's a Sentry App, it's none of the above.
+        SENTRY_APP = 3
 
     TypeRegistration = namedtuple(
         "TypeRegistration",

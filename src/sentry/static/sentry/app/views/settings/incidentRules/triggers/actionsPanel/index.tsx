@@ -32,6 +32,7 @@ const ActionLabel = {
   [ActionType.SLACK]: t('Slack'),
   [ActionType.PAGERDUTY]: t('Pagerduty'),
   [ActionType.MSTEAMS]: t('Microsoft Teams'),
+  [ActionType.INTEGRATION]: t('Integration'),
 };
 
 const TargetLabel = {
@@ -63,6 +64,8 @@ const getPlaceholderForType = (type: ActionType) => {
       return 'username or channel';
     case ActionType.PAGERDUTY:
       return 'service';
+    case ActionType.INTEGRATION:
+      return 'integration';
     default:
       throw Error('Not implemented');
   }

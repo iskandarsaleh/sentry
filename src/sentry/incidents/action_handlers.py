@@ -14,6 +14,7 @@ from sentry.incidents.models import (
     IncidentTrigger,
     INCIDENT_STATUS,
 )
+from sentry.models.sentryapp import SentryApp
 from sentry.utils.email import MessageBuilder
 from sentry.utils.http import absolute_uri
 
@@ -145,6 +146,20 @@ class PagerDutyActionHandler(ActionHandler):
     def send_alert(self, metric_value):
         # TODO: finish
         pass
+
+
+# TODO MARCOS 2.0 IntegrationActionHandler maybe this shouldn't be registered?
+@AlertRuleTriggerAction.register_type(
+    "integration",
+    AlertRuleTriggerAction.Type.INTEGRATION,
+    [],
+)
+class IntegrationActionHandler(ActionHandler):
+    def fire(self, metric_value):
+        self.send_alert(metric_value)
+
+    def resolve(self, metric_value):
+        self.send_alert(metric_value)
 
 
 def format_duration(minutes):
