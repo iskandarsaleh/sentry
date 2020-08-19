@@ -55,6 +55,7 @@ type Props = {
   onChange: (triggerIndex: number, triggers: Trigger[], actions: Action[]) => void;
 };
 
+// TODO MARCOS what is this?
 const getPlaceholderForType = (type: ActionType) => {
   switch (type) {
     case ActionType.SLACK:
@@ -267,12 +268,82 @@ class ActionsPanel extends React.PureComponent<Props> {
             return (
               actions &&
               actions.map((action: Action, i: number) => {
-                const isUser = action.targetType === TargetType.USER;
-                const isTeam = action.targetType === TargetType.TEAM;
-
                 const availableAction = availableActions?.find(
                   a => getActionUniqueKey(a) === getActionUniqueKey(action)
                 );
+
+                let field0 = <span />;
+                let field1 = <span />;
+                if (availableAction && availableAction.allowedTargetTypes.length > 1) {
+                  field0 = (
+                    <SelectControl
+                      isDisabled={disabled || loading}
+                      value={action.targetType}
+                      options={availableAction?.allowedTargetTypes?.map(allowedType => ({
+                        value: allowedType,
+                        label: TargetLabel[allowedType],
+                      }))}
+                      onChange={this.handleChangeTarget.bind(this, triggerIndex, i)}
+                    />
+                  );
+                }
+
+                switch (action.targetType) {
+                  case TargetType.TEAM:
+                  case TargetType.USER:
+                    const isTeam = action.targetType === TargetType.TEAM;
+
+                    field1 = (
+                      <SelectMembers
+                        disabled={disabled}
+                        key={isTeam ? 'team' : 'member'}
+                        showTeam={isTeam}
+                        project={projects.find(({slug}) => slug === currentProject)}
+                        organization={organization}
+                        value={action.targetIdentifier}
+                        onChange={this.handleChangeTargetIdentifier.bind(
+                          this,
+                          triggerIndex,
+                          i
+                        )}
+                      />
+                    );
+                    break;
+
+                  case TargetType.SPECIFIC:
+                    if (availableAction?.inputType === 'select') {
+                      field1 = (
+                        <SelectControl
+                          isDisabled={disabled || loading}
+                          value={action.targetIdentifier}
+                          options={availableAction?.options || []}
+                          onChange={this.handleChangeTargetIdentifier.bind(
+                            this,
+                            triggerIndex,
+                            i
+                          )}
+                        />
+                      );
+                    } else {
+                      field1 = (
+                        <Input
+                          disabled={disabled}
+                          key={action.type}
+                          value={action.targetIdentifier}
+                          onChange={this.handleChangeSpecificTargetIdentifier.bind(
+                            this,
+                            triggerIndex,
+                            i
+                          )}
+                          placeholder={getPlaceholderForType(action.type)}
+                        />
+                      );
+                    }
+                    break;
+
+                  default:
+                    break;
+                }
 
                 return (
                   <PanelItemGrid key={i}>
@@ -295,61 +366,8 @@ class ActionsPanel extends React.PureComponent<Props> {
                       value={getActionUniqueKey(action)}
                       options={items ?? []}
                     />
-
-                    {availableAction && availableAction.allowedTargetTypes.length > 1 ? (
-                      <SelectControl
-                        isDisabled={disabled || loading}
-                        value={action.targetType}
-                        options={availableAction?.allowedTargetTypes?.map(
-                          allowedType => ({
-                            value: allowedType,
-                            label: TargetLabel[allowedType],
-                          })
-                        )}
-                        onChange={this.handleChangeTarget.bind(this, triggerIndex, i)}
-                      />
-                    ) : (
-                      <span />
-                    )}
-
-                    {isUser || isTeam ? (
-                      <SelectMembers
-                        disabled={disabled}
-                        key={isTeam ? 'team' : 'member'}
-                        showTeam={isTeam}
-                        project={projects.find(({slug}) => slug === currentProject)}
-                        organization={organization}
-                        value={action.targetIdentifier}
-                        onChange={this.handleChangeTargetIdentifier.bind(
-                          this,
-                          triggerIndex,
-                          i
-                        )}
-                      />
-                    ) : availableAction?.inputType === 'select' ? (
-                      <SelectControl
-                        isDisabled={disabled || loading}
-                        value={action.targetIdentifier}
-                        options={availableAction?.options || []}
-                        onChange={this.handleChangeTargetIdentifier.bind(
-                          this,
-                          triggerIndex,
-                          i
-                        )}
-                      />
-                    ) : (
-                      <Input
-                        disabled={disabled}
-                        key={action.type}
-                        value={action.targetIdentifier}
-                        onChange={this.handleChangeSpecificTargetIdentifier.bind(
-                          this,
-                          triggerIndex,
-                          i
-                        )}
-                        placeholder={getPlaceholderForType(action.type)}
-                      />
-                    )}
+                    {field0}
+                    {field1}
                     <DeleteActionButton
                       triggerIndex={triggerIndex}
                       index={i}
