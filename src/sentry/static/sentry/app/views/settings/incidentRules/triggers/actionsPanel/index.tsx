@@ -118,19 +118,7 @@ class ActionsPanel extends React.PureComponent<Props> {
       return;
     }
 
-    const action: Action = {
-      type: actionConfig.type,
-      targetType:
-        actionConfig &&
-        actionConfig.allowedTargetTypes &&
-        actionConfig.allowedTargetTypes.length > 0
-          ? actionConfig.allowedTargetTypes[0]
-          : null,
-      targetIdentifier: '',
-      integrationId: actionConfig.integrationId,
-      inputType: actionConfig.inputType,
-      options: actionConfig.options || null,
-    };
+    const action: Action = getCleanAction(actionConfig);
 
     // Add new actions to critical by default
     const triggerIndex = 0;
@@ -176,19 +164,7 @@ class ActionsPanel extends React.PureComponent<Props> {
       return;
     }
 
-    const newAction: Action = {
-      type: actionConfig.type,
-      targetType:
-        actionConfig &&
-        actionConfig.allowedTargetTypes &&
-        actionConfig.allowedTargetTypes.length > 0
-          ? actionConfig.allowedTargetTypes[0]
-          : null,
-      targetIdentifier: '',
-      integrationId: actionConfig.integrationId,
-      inputType: actionConfig.inputType,
-      options: actionConfig.options || null,
-    };
+    const newAction: Action = getCleanAction(actionConfig);
     onChange(triggerIndex, triggers, replaceAtArrayIndex(actions, index, newAction));
   };
 
