@@ -1,9 +1,11 @@
 from __future__ import absolute_import
 
-from sentry.models import Integration
+from sentry.constants import SentryAppInstallationStatus
+from sentry.models import ApiApplication, ApiGrant, Integration, SentryApp, SentryAppInstallation
 from sentry.testutils import APITestCase
 
 
+# TODO MARCOS 9.5 TEST
 class OrganizationAlertRuleAvailableActionIndexEndpointTest(APITestCase):
     endpoint = "sentry-api-0-organization-alert-rule-available-actions"
 
@@ -12,9 +14,14 @@ class OrganizationAlertRuleAvailableActionIndexEndpointTest(APITestCase):
         self.login_as(self.user)
 
     def create_integration_response(self, type, integration=None):
+        allowed_target_types = {
+            "email": ["user", "team"],
+            "integration": [],
+        }.get(type, ["specific"])
+
         return {
             "type": type,
-            "allowedTargetTypes": ["user", "team"] if type == "email" else ["specific"],
+            "allowedTargetTypes": allowed_target_types,
             "integrationName": integration.name if integration else None,
             "integrationId": integration.id if integration else None,
             "inputType": "select" if type in ["pagerduty", "email"] else "text",
@@ -59,3 +66,18 @@ class OrganizationAlertRuleAvailableActionIndexEndpointTest(APITestCase):
         self.create_team(organization=self.organization, members=[self.user])
         resp = self.get_response(self.organization.slug)
         assert resp.status_code == 404
+
+    def test_sentry_apps(self):
+        sentry_app = self.create_sentry_app(name="foo", organization=self.organization, is_alertable=True)
+        self.create_sentry_app_installation(slug=sentry_app.slug, organization=self.organization, user=self.user)
+
+        with self.feature([
+            "organizations:incidents",
+            "organizations:integrations-metric-alerts-support",
+        ]):
+            resp = self.get_valid_response(self.organization.slug)
+
+        assert resp.data == [
+            self.create_integration_response("email"),
+            self.create_integration_response("integration", sentry_app),
+        ]
